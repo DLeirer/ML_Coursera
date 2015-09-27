@@ -1,0 +1,42 @@
+---
+title: "Coursera_Machine_Learning_Project"
+author: "DJL"
+date: "23/09/2015"
+output: word_document
+---
+
+#Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+##Approach
+
+In order to approach this problem I decided to first explore the data and clean it. This means that I would need to create a complete set of data, with no missing variables in the form of ideally a data frame. 
+The next step would be dimension reduction. Machine learning techniques can use a large amount of processing power. In order to avoid that I would first look at highly correlated variables and to eliminate all but one of these.
+I would then split the data 1 to 10, and follow this by performing a Random forrest analysis on the small dataset to idenitify the most relevant variables. 
+This can then be further refined.
+I use the remaining data to check the accuracy of my model.
+
+###Data Cleaning
+As part of the data cleaning I removed all variables containing NA values. I then made sure my data was in the form of a dataframe. 
+Due to the simplicitiy of this data further steps where not neccesary. 
+
+##D#imension Reduction
+In order to more easily work with the data I created a correlation matrix, which correlated each variable with all other variables. 
+I highlighted all variables with a correlation above 0.5. This is an extremly low threshold, that was only used because this data allows for very high predictions. 
+
+
+###Data Splitting
+The data was split into a training (10 %) and test (90 %) set.
+
+###Random Forrest
+I performed a random forrest analysis. This was done using the training data set in order to reduce processing time. Standard caret configurations where used.
+I then plotted the most predictive variables.
+
+image:![](~/Documents/A_University/Coursera/8_Practical_Machine_Learning/Project/Variable_imp.png)
+
+###Prediction
+I tested the accuracy of the model using the test data, by using the predict function and a confusion matrix.
+The results we achieved 97 % accuracy, with a sensitivity of at least 96 % and a Specificity of over 99 %. I feel this is suitable for this exercise. Since I have not used any of the testng data before there is little reason to think I was overfitting.
+
+

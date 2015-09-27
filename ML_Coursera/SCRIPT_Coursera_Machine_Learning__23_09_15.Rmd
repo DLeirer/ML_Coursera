@@ -1,0 +1,147 @@
+---
+title: "Coursera_Machine_Learning_Project"
+author: "DJL"
+date: "23/09/2015"
+output: html_document
+---
+
+##Load Packages
+```{r}
+
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+library(randomForest)
+library(caret)
+library(doMC)
+library(pROC)
+registerDoMC(cores = 8) 
+
+
+setwd("~/Documents/A_University/Coursera/8_Practical_Machine_Learning/Project")
+
+```
+
+
+#Load training data
+```{r}
+
+training<-read.csv("pml-training.csv",na.strings=c("NA"," "))
+str(training)
+dim(training)
+summary(training)
+
+
+colnames(training)
+training$classe 
+
+```
+
+##Feature Selection
+```{r}
+
+##Remove features with missing data. 
+
+training_na<-apply(training,2,function(x)sum(is.na(x)))
+t_na<-t(as.matrix(training_na))
+t_nal<-t_na[,t_na >= 100]
+names_to_drop<-row.names(as.matrix(t_nal))
+
+new_training<-training[,!colnames(training) %in% names_to_drop]
+
+
+nzvar<-nearZeroVar (new_training)
+
+new_training<-new_training[,-c(nzvar)]
+
+new_training$X<-NULL
+str(new_training)
+
+ntf<-apply(new_training,2,as.factor)
+ntf2<-apply(ntf,2,as.numeric)
+ntf2<-as.data.frame(ntf2)
+tf3<-ntf2[,-c(1,4,58)]
+
+
+# calculate correlation matrix
+correlationMatrix <- cor(tf3)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
+
+vwhc<-tf3[,-c(highlyCorrelated)]##variebles without high correlations
+str(vwhc)
+
+vwhc$classe<-training$classe
+
+
+
+
+
+```
+
+##Small Random Forrest
+```{r}
+inTrain = createDataPartition(vwhc$classe, p = 0.1,list=F)
+training2 = new_training[ inTrain,]
+testing2 = new_training[-inTrain,]
+
+View(training2)
+```
+
+##Second Dimension reduction by looking at variable importance
+```{r}
+# prepare training scheme
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+# train the model
+model <- train(classe~., data=training2, method="lvq", preProcess="scale", trControl=control)
+# estimate variable importance
+importance <- varImp(model, scale=FALSE)
+# summarize importance
+print(importance)
+# plot importance
+plot(importance)
+str(importance)
+imp<-(importance$importance)
+str(imp)
+?varImp
+```
+
+##Random Forrest Final model
+```{r}
+rf_models<-train(classe~.,data=training2,method="rf",ntree=10)
+pred<-predict(rf_models,testing2)
+
+table(pred)
+
+confusionMatrix(testing2$classe,pred)
+
+varImpObj <- varImp(rf_models)
+plot(varImpObj)
+```
+
+
+##Validation
+```{r}
+validate<-read.csv("pml-testing.csv")
+str(validate)
+
+pred2<-predict(rf_models,validate)
+pred2
+confusionMatrix(validate$classe,pred)
+colnames(validate)
+```
+
+##Write Answers
+```{r}
+pml_write_files = function(x){
+n = length(x)
+for(i in 1:n){
+filename = paste0("problem_id_",i,".txt")
+write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+}
+}
+x <- testing
+
+pml_write_files (pred2)
+```
